@@ -43,35 +43,35 @@ fn main() -> ! {
     gpioe.bsrr.write(|w| w.br11().set_bit());
 
 
-    // // Unsafe manipulation
-    // unsafe {
-    //     iprintln!(& mut itm.stim[0], "Enter to unsafe");
+    // Unsafe manipulation
+    unsafe {
+        iprintln!(& mut itm.stim[0], "Enter to unsafe");
 
-    //     // // BAD address
-    //     // ptr::read_volatile(0x4800_1800 as *const u32); // there is no register at this address!
+        // // BAD address
+        // ptr::read_volatile(0x4800_1800 as *const u32); // there is no register at this address!
 
-    //     // A magic address! BSRR = Bit Set/Reset Register
-    //     const GPIOE_BSRR: u32 = 0x4800_1000 + 0x18; // GPIOE + BSRR offset
+        // A magic address! BSRR = Bit Set/Reset Register
+        const GPIOE_BSRR: u32 = 0x4800_1000 + 0x18; // GPIOE + BSRR offset
 
-    //     // print the initial content of ODR
-    //     iprint_odr(&mut itm);
+        // print the initial content of ODR
+        iprint_odr(&mut itm);
 
-    //     // Turn on the "North" LED (red)
-    //     ptr::write_volatile(GPIOE_BSRR as *mut u32, 1 << 9);
-    //     iprint_odr(&mut itm);
+        // Turn on the "North" LED (red)
+        ptr::write_volatile(GPIOE_BSRR as *mut u32, 1 << 9);
+        iprint_odr(&mut itm);
 
-    //     // Turn on the "East" LED (green)
-    //     ptr::write_volatile(GPIOE_BSRR as *mut u32, 1 << 11);
-    //     iprint_odr(&mut itm);
+        // Turn on the "East" LED (green)
+        ptr::write_volatile(GPIOE_BSRR as *mut u32, 1 << 11);
+        iprint_odr(&mut itm);
 
-    //     // Turn off the "North" LED
-    //     ptr::write_volatile(GPIOE_BSRR as *mut u32, 1 << 9 + 16);
-    //     iprint_odr(&mut itm);
+        // Turn off the "North" LED
+        ptr::write_volatile(GPIOE_BSRR as *mut u32, 1 << 9 + 16);
+        iprint_odr(&mut itm);
 
-    //     // Turn off the "East" LED
-    //     ptr::write_volatile(GPIOE_BSRR as *mut u32,  1 << (11 + 16));
-    //     iprint_odr(&mut itm);
-    // }
+        // Turn off the "East" LED
+        ptr::write_volatile(GPIOE_BSRR as *mut u32,  1 << (11 + 16));
+        iprint_odr(&mut itm);
+    }
 
     loop {}
 }
