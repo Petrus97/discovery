@@ -10,6 +10,6 @@ fn main() -> ! {
     let mut itm = aux6::init();
 
     iprintln!(&mut itm.stim[0], "Hello, world!");
-
+    panic!("Hello panic!");
     loop {}
 }
