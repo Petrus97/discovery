@@ -2,18 +2,23 @@
 #![no_main]
 #![no_std]
 
+#[allow(unused_imports)]
 use core::fmt::{self, Write};
 
 use aux11::usart1;
 #[allow(unused_imports)]
 use aux11::{entry, iprint, iprintln};
+use heapless::{consts, Vec};
 
+
+#[allow(unused_macros)]
 macro_rules! uprint {
     ($serial:expr, $($arg:tt)*) => {
         $serial.write_fmt(format_args!($($arg)*)).ok()
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! uprintln {
     ($serial:expr, $fmt:expr) => {
         uprint!($serial, concat!($fmt, "\n"))
@@ -78,19 +83,39 @@ fn main() -> ! {
     
     // uprintln!(serial, "The answer is {}", 40 + 2);
 
+    // A buffer with 32 bytes of capacity
+    let mut buffer: Vec<u8, consts::U32> = Vec::new();
+
 
     loop {
-        // Wait until there's data available
-        while usart1.isr.read().rxne().bit_is_clear() {}
+        buffer.clear();
+
+        let mut byte: u8 = 0x00;
+        while byte != b'\r' { // while ENTER is not pressed
+            // Wait until there's data available
+            while usart1.isr.read().rxne().bit_is_clear() {}
+            // Retrieve the data
+            byte = (usart1.rdr.read().rdr().bits() & 0xFF) as u8;
+            // Add byte to buffer
+            buffer.push(byte).expect("error add byte to uart buffer");
+        }
+        
+        while !buffer.is_empty() {
+            // Wait to send back data
+            while usart1.isr.read().txe().bit_is_clear() {}
+
+            if let Some(byte) = buffer.pop() { // Use pop to reverse the string
+                // Send back the data
+                usart1.tdr.write(|w| w.tdr().bits(u16::from(byte)));
+            }
+        }
 
         // Retrieve the data
-        let byte = usart1.rdr.read().rdr().bits();
+        // let byte = usart1.rdr.read().rdr().bits();
 
-        // Wait to send back data
-        while usart1.isr.read().txe().bit_is_clear() {}
+        
 
-        // Send back the data
-        usart1.tdr.write(|w| w.tdr().bits(byte));
+        
 
         // aux11::bkpt();
     }
