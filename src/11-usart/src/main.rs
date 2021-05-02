@@ -74,10 +74,24 @@ fn main() -> ! {
     //     elapsed as f32 / mono_timer.frequency().0 as f32 * 1e6
     // );
 
-    let mut serial = SerialPort { usart1 };
+    // let mut serial = SerialPort { usart1 };
     
-    uprintln!(serial, "The answer is {}", 40 + 2);
+    // uprintln!(serial, "The answer is {}", 40 + 2);
 
 
-    loop {}
+    loop {
+        // Wait until there's data available
+        while usart1.isr.read().rxne().bit_is_clear() {}
+
+        // Retrieve the data
+        let byte = usart1.rdr.read().rdr().bits();
+
+        // Wait to send back data
+        while usart1.isr.read().txe().bit_is_clear() {}
+
+        // Send back the data
+        usart1.tdr.write(|w| w.tdr().bits(byte));
+
+        // aux11::bkpt();
+    }
 }
