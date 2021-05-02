@@ -25,17 +25,23 @@ fn main() -> ! {
     // magnetometer
     {
         // TODO Broadcast START
-        i2c1.cr2.write(|w| w.start().set_bit());
+        i2c1.cr2.write(|w| {
+            w.start().set_bit();
+            w.sadd1().bits(MAGNETOMETER_ADDR);
+            w.rd_wrn().clear_bit();
+            w.nbytes().bits(1);
+            w.autoend().clear_bit()
+        });
         // TODO Broadcast the MAGNETOMETER address with the R/W bit set to Write
-        i2c1.cr2.write(|w| w.sadd1().bits(MAGNETOMETER_ADDR));
-        i2c1.cr2.write(|w| w.rd_wrn().clear_bit());
+        // i2c1.cr2.write(|w| w.sadd1().bits(MAGNETOMETER_ADDR));
+        // i2c1.cr2.write(|w| w.rd_wrn().clear_bit());
 
         // TODO Send the address of the register that we want to read: IRA_REG_M / WHO_AM_I_M
-        i2c1.cr2.write(|w| w.nbytes().bits(1));
-        i2c1.cr2.write(|w| w.autoend().clear_bit());
+        // i2c1.cr2.write(|w| w.nbytes().bits(1));
+        // i2c1.cr2.write(|w| w.autoend().clear_bit());
 
         while i2c1.isr.read().txis().bit_is_clear() {} // This bit is set when I2C_TXDR register is empty. It is cleared when the next data to be sent is written in the I2C_TXDR register.
-        
+
         i2c1.txdr.write(|w| w.txdata().bits(MAGNETOMETER_ID));
         
         while i2c1.isr.read().tc().bit_is_clear() {}
@@ -44,11 +50,16 @@ fn main() -> ! {
     // Stage 2: Receive the contents of the register we asked for
     let byte = {
         // TODO Broadcast RESTART
-        i2c1.cr2.write(|w| w.start().set_bit());
+        i2c1.cr2.write(|w| {
+            w.start().set_bit();
+            w.sadd1().bits(MAGNETOMETER_ADDR); // This is not important since the bus is used only by the master and slave
+            w.rd_wrn().set_bit();
+            w.nbytes().bits(1)
+        });
         // TODO Broadcast the MAGNETOMETER address with the R/W bit set to Read
-        i2c1.cr2.write(|w| w.sadd1().bits(MAGNETOMETER_ADDR));
-        i2c1.cr2.write(|w| w.rd_wrn().set_bit());
-        i2c1.cr2.write(|w| w.nbytes().bits(1));
+        // i2c1.cr2.write(|w| w.sadd1().bits(MAGNETOMETER_ADDR));
+        // i2c1.cr2.write(|w| w.rd_wrn().set_bit());
+        // i2c1.cr2.write(|w| w.nbytes().bits(1));
 
         // TODO Receive the contents of the register
         while i2c1.isr.read().rxne().bit_is_clear() {} // This bit is set by hardware when the received data is copied into the I2C_RXDR register.
