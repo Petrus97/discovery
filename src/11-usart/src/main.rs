@@ -97,7 +97,13 @@ fn main() -> ! {
             // Retrieve the data
             byte = (usart1.rdr.read().rdr().bits() & 0xFF) as u8;
             // Add byte to buffer
-            buffer.push(byte).expect("error add byte to uart buffer");
+            if buffer.push(byte).is_err() {
+                // buffer full 
+                for b in b"error: buffer full\n\r" {
+                    while usart1.isr.read().txe().bit_is_clear() {}
+                    usart1.tdr.write(|w| w.tdr().bits(u16::from(*b)))
+                }
+            }
         }
         
         while !buffer.is_empty() {
