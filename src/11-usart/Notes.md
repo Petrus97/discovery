@@ -8,7 +8,7 @@ The phrase is sended correctly
 ```
 The quic
 ```
-# Using ISR register (Status Register)
+# Using ISR register (Interrupt & Status Register)
 The status register (ISR) has a flag, TXE, that indicates if it's "safe" to write to the TDR register without incurring in data loss.
 ```
 The quick brown fox jumps over the lazy dog.
