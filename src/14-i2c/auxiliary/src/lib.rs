@@ -10,6 +10,7 @@ pub use cortex_m_rt::entry;
 pub use f3::hal::{delay::Delay, prelude, stm32f30x::i2c1};
 
 use cortex_m::peripheral::ITM;
+#[allow(unused_imports)]
 use f3::{
     hal::{
         i2c::I2c,
@@ -18,6 +19,8 @@ use f3::{
     },
     Lsm303dlhc,
 };
+
+use lsm303agr::Lsm303agr;
 
 pub fn init() -> (&'static i2c1::RegisterBlock, Delay, ITM) {
     let cp = cortex_m::Peripherals::take().unwrap();
@@ -34,7 +37,8 @@ pub fn init() -> (&'static i2c1::RegisterBlock, Delay, ITM) {
 
     let i2c = I2c::i2c1(dp.I2C1, (scl, sda), 400.khz(), clocks, &mut rcc.apb1);
 
-    Lsm303dlhc::new(i2c).unwrap();
+    // Lsm303dlhc::new(i2c).unwrap();
+    Lsm303agr::new_with_i2c(i2c);
 
     let delay = Delay::new(cp.SYST, clocks);
 
