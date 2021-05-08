@@ -11,7 +11,7 @@ const MAGNETOMETER_ADDR: u8 = 0b001_1110;
 
 // Addresses of the magnetometer's registers
 // const OUT_X_H_M: u8 = 0x03;
-const OUTX_H_REG_M: u8 = 0x69;
+const OUTX_L_REG_M: u8 = 0x68;
 // const IRA_REG_M: u8 = 0x0A;
 const MAGNETOMETER_ID: u8 = 0x4f; // WHO_AM_I_M
 
@@ -36,7 +36,7 @@ fn main() -> ! {
         while i2c1.isr.read().txe().bit_is_clear() {}
 
         // Send the address we want to read: OUTX_H_REG_M
-        i2c1.txdr.write(|w| w.txdata().bits(OUTX_H_REG_M));
+        i2c1.txdr.write(|w| w.txdata().bits(OUTX_L_REG_M));
 
         while i2c1.isr.read().tc().bit_is_clear() {}
 
@@ -65,12 +65,12 @@ fn main() -> ! {
 
         // iprintln!(&mut itm.stim[0], "{:?}", buffer);
 
-        let x_h = u16::from(buffer[0]); // high byte
-        let x_l = u16::from(buffer[1]); // low byte
-        let z_h = u16::from(buffer[2]);
-        let z_l = u16::from(buffer[3]);
-        let y_h = u16::from(buffer[4]);
-        let y_l = u16::from(buffer[5]);
+        let x_l = u16::from(buffer[0]); // high byte
+        let x_h = u16::from(buffer[1]); // low byte
+        let y_l= u16::from(buffer[2]);
+        let y_h = u16::from(buffer[3]);
+        let z_l = u16::from(buffer[4]);
+        let z_h = u16::from(buffer[5]);
 
         let x = ((x_h << 8) + x_l) as i16; // Can be negative
         let y = ((y_h << 8) + y_l) as i16;
