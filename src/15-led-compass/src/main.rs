@@ -22,14 +22,14 @@ fn main() -> ! {
 
         iprintln!(&mut itm.stim[0], "{:?}", measure);
         // Look at the signs of the X and Y components to determine in which
-        // quadrant the magnetic field is
+        // quadrant the magnetic field is (LSM303AGR axis are different fromm LSM303DHCL!)
         let direction = match (measure.x > 0, measure.y > 0) {
             // Quadrant I
-            (true, true) => Direction::Southeast,
+            (true, true) => Direction::Northwest,
             // Quadrant II
             (false, true) => Direction::Northeast,
             // Quadrant III
-            (false, false) => Direction::Northwest,
+            (false, false) => Direction::Southwest,
             // Quadrant IV
             (true, false) => Direction::Southwest,
         };
