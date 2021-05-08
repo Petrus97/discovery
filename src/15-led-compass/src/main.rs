@@ -2,8 +2,12 @@
 #![no_main]
 #![no_std]
 
+use core::f32::consts::PI;
+
 #[allow(unused_imports)]
 use aux15::{entry, iprint, iprintln, prelude::*, Direction};
+
+use m::Float;
 
 #[entry]
 fn main() -> ! {
@@ -20,23 +24,33 @@ fn main() -> ! {
     loop {
         let measure = lsm303agr.mag_data().unwrap();
 
-        iprintln!(&mut itm.stim[0], "{:?}", measure);
-        // Look at the signs of the X and Y components to determine in which
-        // quadrant the magnetic field is (LSM303AGR axis are different fromm LSM303DHCL!)
-        let direction = match (measure.x > 0, measure.y > 0) {
-            // Quadrant I
-            (true, true) => Direction::Northwest,
-            // Quadrant II
-            (false, true) => Direction::Northeast,
-            // Quadrant III
-            (false, false) => Direction::Southwest,
-            // Quadrant IV
-            (true, false) => Direction::Southwest,
+        let theta = (measure.y as f32).atan2(measure.x as f32); // in radians
+
+        // iprintln!(&mut itm.stim[0], "{:?} {}°", measure, (theta * 180. / PI) );
+
+        let direction = if theta < -7. * PI / 8. {
+            Direction::Southeast
+        } else if theta < -5. * PI / 8. {
+            Direction::South
+        } else if theta < -3. * PI / 8. {
+            Direction::Southwest
+        } else if theta < -PI / 8. {
+            Direction::West
+        } else if theta < PI / 8. {
+            Direction::West
+        } else if theta < 3. * PI / 8. {
+            Direction::Northwest
+        } else if theta < 5. * PI / 8. {
+            Direction::North
+        } else if theta < 7. * PI / 8. {
+            Direction::Northeast
+        } else {
+            Direction::East
         };
         
         leds.iter_mut().for_each(|led| led.off());
         leds[direction].on();
 
-        delay.delay_ms(1_000_u16);
+        delay.delay_ms(100_u16);
     }
 }
