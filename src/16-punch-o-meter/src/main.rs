@@ -3,25 +3,59 @@
 #![no_std]
 
 #[allow(unused_imports)]
-use aux16::{entry, iprint, iprintln, prelude::*, I16x3, Sensitivity};
+use aux16::{entry, iprint, iprintln, prelude::*, I16x3, Sensitivity, AccelMode, AccelOutputDataRate};
 
 #[entry]
 fn main() -> ! {
-    let (mut lsm303dlhc, mut delay, _mono_timer, mut itm) = aux16::init();
+    const SENSITIVITY: f32 = 11.72 / (1 << 14) as f32;
+    const THRESHOLD: f32 = 0.5;
+    let (mut lsm303agr, mut delay, mono_timer, mut itm) = aux16::init();
+
+    let measurement_time = mono_timer.frequency().0; 
+    let mut instant = None;
+    let mut max_acceleration = 0.;
+
+    lsm303agr.set_accel_odr(AccelOutputDataRate::Hz50).unwrap();
+    lsm303agr.set_accel_mode(AccelMode::HighResolution).unwrap();
 
     // extend sensing range to `[-12g, +12g]`
-    lsm303dlhc.set_accel_sensitivity(Sensitivity::G12).unwrap();
+    // lsm303dlhc.set_accel_sensitivity(Sensitivity::G12).unwrap();
     loop {
-        const SENSITIVITY: f32 = 12. / (1 << 14) as f32;
+        // Measure only on x axis
 
-        let I16x3 { x, y, z } = lsm303dlhc.accel().unwrap();
+        let measure= lsm303agr.accel_data().unwrap();// lsm303dlhc.accel().unwrap();
 
-        let x = f32::from(x) * SENSITIVITY;
-        let y = f32::from(y) * SENSITIVITY;
-        let z = f32::from(z) * SENSITIVITY;
+        let x = f32::from(measure.x) * SENSITIVITY;
+        // let y = f32::from(measure.y) * SENSITIVITY;
+        // let z = f32::from(measure.z) * SENSITIVITY;
 
-        iprintln!(&mut itm.stim[0], "{:?}", (x, y, z));
+        // iprintln!(&mut itm.stim[0], "{:?}", (x, y, z));
+        match instant {
+            None => {
+                // If acceleration goes above a threshold we start measuring
+                if x > THRESHOLD {
+                    iprintln!(&mut itm.stim[0], "Start!");
+                    max_acceleration = x;
+                    instant = Some(mono_timer.now());
+                }
+            }
+            Some(instant) if instant.elapsed() < measurement_time => {
+                if x > max_acceleration {
+                    max_acceleration = x;
+                }
+            }
+            _ => {
+                // Report max value
+                iprintln!(&mut itm.stim[0], "Max acceleration: {}g", max_acceleration);
 
-        delay.delay_ms(1_000_u16);
+                // Measurement Done
+                instant = None;
+
+                // Reset
+                max_acceleration = 0.;
+            }
+        }
+
+        delay.delay_ms(50_u16);
     }
 }
