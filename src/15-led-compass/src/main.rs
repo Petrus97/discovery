@@ -64,8 +64,9 @@ fn main() -> ! {
     
         let mag = (x * x + y * y + z * z).sqrt();
     
-        iprintln!(&mut itm.stim[0], "{} mG", mag * 1_000.);
+        // iprintln!(&mut itm.stim[0], "{} mG", mag * 1_000.);
+        iprintln!(&mut itm.stim[0], "{}\t{}\t{}", measure.x, measure.y, measure.z);
 
-        delay.delay_ms(500_u16);
+        delay.delay_ms(100_u16);
     }
 }
