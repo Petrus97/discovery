@@ -21,6 +21,11 @@ fn main() -> ! {
     // Put the magnetometer in Continuous mode
     let mut lsm303agr = lsm303agr.into_mag_continuous().ok().unwrap();
 
+    const XY_GAIN: f32 = 1100.;
+    const Z_GAIN: f32 = 980.;
+    // let mag = lsm303agr.mag_data().unwrap();
+    
+
     loop {
         let measure = lsm303agr.mag_data().unwrap();
 
@@ -47,10 +52,20 @@ fn main() -> ! {
         } else {
             Direction::East
         };
-        
+
         leds.iter_mut().for_each(|led| led.off());
         leds[direction].on();
 
-        delay.delay_ms(100_u16);
+        let (x, y, z) = (
+            measure.x as f32 / XY_GAIN,
+            measure.y as f32 / XY_GAIN,
+            measure.z as f32 / Z_GAIN,
+        );
+    
+        let mag = (x * x + y * y + z * z).sqrt();
+    
+        iprintln!(&mut itm.stim[0], "{} mG", mag * 1_000.);
+
+        delay.delay_ms(500_u16);
     }
 }
